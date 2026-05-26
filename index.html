@@ -2482,7 +2482,9 @@ function esc(s) {
 }
 
 function isCapHeader(s) {
-  return /^[A-Z][A-Z\s]{3,}[\-—:]/.test(s);
+  // Require: starts uppercase, body is uppercase/spaces/apostrophes/digits/hyphens,
+  // ends with —, -, or :, and has at least 3 uppercase letters total (avoids false positives)
+  return /^[A-Z][A-Z\s'\d-]{3,}[\-—:]/.test(s) && (s.match(/[A-Z]/g)||[]).length >= 3;
 }
 
 function formatSectionBody(raw) {
@@ -2494,7 +2496,6 @@ function formatSectionBody(raw) {
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Blank line — skip
     if (!trimmed) { i++; continue; }
 
     // Indented block → code/formula box
@@ -2503,7 +2504,6 @@ function formatSectionBody(raw) {
       while (i < lines.length) {
         const l = lines[i];
         if (!l.trim()) {
-          // Include blank line only if followed by more indented content
           if (i+1 < lines.length && /^  +\S/.test(lines[i+1])) { block.push(''); i++; continue; }
           else break;
         }
@@ -2511,10 +2511,8 @@ function formatSectionBody(raw) {
         block.push(l);
         i++;
       }
-      // Trim trailing blanks
       while (block.length && !block[block.length-1].trim()) block.pop();
       if (block.length) {
-        // Dedent by removing common leading spaces
         const minIndent = Math.min(...block.filter(l=>l.trim()).map(l=>l.match(/^ */)[0].length));
         const dedented = block.map(l => l.slice(minIndent)).join('\n');
         html += `<div class="sb-code">${esc(dedented)}</div>`;
@@ -2522,14 +2520,12 @@ function formatSectionBody(raw) {
       continue;
     }
 
-    // ALL-CAPS header (e.g. "SUPERVISED LEARNING — description")
+    // ALL-CAPS header
     if (isCapHeader(trimmed)) {
-      // Split label from inline description
       const m = trimmed.match(/^([A-Z][A-Z\s\/\-\(\)&]+?)(?:\s*[—\-:]\s*)(.*)$/);
       const tag  = m ? m[1].trim() : trimmed.replace(/[:\-—]\s*$/, '').trim();
       const desc = m ? m[2].trim() : '';
       i++;
-      // Collect any immediately following indented lines as the body
       const bodyLines = [];
       while (i < lines.length && /^  +/.test(lines[i])) {
         bodyLines.push(lines[i].trim());
@@ -2542,14 +2538,12 @@ function formatSectionBody(raw) {
       continue;
     }
 
-    // Plain prose — collect consecutive non-special lines
+    // Plain prose
     const para = [];
     while (i < lines.length) {
       const l = lines[i];
       const t = l.trim();
-      if (!t) break;
-      if (/^  +\S/.test(l)) break;
-      if (isCapHeader(t)) break;
+      if (!t || /^  +\S/.test(l) || isCapHeader(t)) break;
       para.push(t);
       i++;
     }
