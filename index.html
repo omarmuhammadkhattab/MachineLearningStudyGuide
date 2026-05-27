@@ -2482,9 +2482,29 @@ function esc(s) {
 }
 
 function isCapHeader(s) {
-  // Require: starts uppercase, body is uppercase/spaces/apostrophes/digits/hyphens,
-  // ends with —, -, or :, and has at least 3 uppercase letters total (avoids false positives)
-  return /^[A-Z][A-Z\s'\d-]{3,}[\-—:]/.test(s) && (s.match(/[A-Z]/g)||[]).length >= 3;
+  // Detect ALL-CAPS section headers. Character set includes hyphens, apostrophes,
+  // digits, parens — common in headers like "NON-SPHERICAL", "SOFT MARGIN (C-SVM)".
+  // Separator is em dash or colon only (NOT hyphen, to avoid splitting mid-word).
+  return /^[A-Z][A-Z\s'\d\-\(\)\/]{3,}[\—:]/.test(s) && (s.match(/[A-Z]/g)||[]).length >= 3;
+}
+
+function extractTag(trimmed) {
+  // Rule: split on em dash only if what follows contains lowercase letters
+  // (meaning it's a description, not an ALL-CAPS continuation of the tag name).
+  const emIdx = trimmed.indexOf('—');
+  if (emIdx !== -1) {
+    const after = trimmed.slice(emIdx + 1).trimStart();
+    if (/[a-z]/.test(after.slice(0, 8))) {
+      // Lowercase in first 8 chars → it's a description
+      return [trimmed.slice(0, emIdx).trim(), after];
+    }
+    // ALL-CAPS after em dash → em dash is part of the tag name
+  }
+  // Colon with description (space after colon required)
+  const colonMatch = trimmed.match(/^(.+?):\s+(.+)$/);
+  if (colonMatch) return [colonMatch[1].trim(), colonMatch[2].trim()];
+  // Trailing colon or em dash only — strip and return bare tag
+  return [trimmed.replace(/[:\—]\s*$/, '').trim(), ''];
 }
 
 function formatSectionBody(raw) {
@@ -2522,9 +2542,7 @@ function formatSectionBody(raw) {
 
     // ALL-CAPS header
     if (isCapHeader(trimmed)) {
-      const m = trimmed.match(/^([A-Z][A-Z\s\/\-\(\)&]+?)(?:\s*[—\-:]\s*)(.*)$/);
-      const tag  = m ? m[1].trim() : trimmed.replace(/[:\-—]\s*$/, '').trim();
-      const desc = m ? m[2].trim() : '';
+      const [tag, desc] = extractTag(trimmed);
       i++;
       const bodyLines = [];
       while (i < lines.length && /^  +/.test(lines[i])) {
