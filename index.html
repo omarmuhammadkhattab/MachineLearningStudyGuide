@@ -1258,9 +1258,18 @@ function vizBiasVariance(containerId){
     function totalTest(t){return bias2(t)+variance(t)+0.08;}
     function trainErr(t){return Math.max(0.02, 0.08-t*0.06);}
 
-    // find min of totalTest
-    let minT=0.5,minV=10;
-    for(let i=0;i<=N;i++){const t=i/N; if(totalTest(t)<minV){minV=totalTest(t);minT=t;}}
+    // find intersection of bias2 and variance (where they cross)
+    let minT=0.5,minDiff=10;
+    for(let i=1;i<=N;i++){
+      const t=i/N, tp=(i-1)/N;
+      // crossing: bias2 goes from above to below variance
+      if((bias2(tp)-variance(tp))*(bias2(t)-variance(t))<=0){
+        // linear interpolation for precise crossing point
+        const db0=bias2(tp)-variance(tp), db1=bias2(t)-variance(t);
+        minT=tp+(-db0/(db1-db0))*(t-tp);
+        break;
+      }
+    }
 
     const curves=[
       {fn:bias2, color:'#9B3A22', dash:[], label:'Bias²', lx:0.05},
@@ -1297,6 +1306,11 @@ function vizBiasVariance(containerId){
     ctx.strokeStyle='#1A1714'; ctx.lineWidth=1.5; ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle='#1A1714'; ctx.font='10px Geist Mono,monospace';
     ctx.fillText('Optimal',px(minT)+4,pad+14);
+    // Dot at the intersection point
+    const intY=py((bias2(minT)+variance(minT))/2);
+    ctx.beginPath(); ctx.arc(px(minT),intY,5,0,Math.PI*2);
+    ctx.fillStyle='#1A1714'; ctx.fill();
+    ctx.strokeStyle='white'; ctx.lineWidth=1.5; ctx.stroke();
 
     // Shaded regions
     ctx.fillStyle='rgba(155,58,34,0.06)';
