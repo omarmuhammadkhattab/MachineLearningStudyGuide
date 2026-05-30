@@ -14,6 +14,7 @@
 <script src="https://skulpt.org/js/skulpt-stdlib.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--bg:#FAF9F7;--bg-panel:#F4F2EE;--bg-input:#EDEAE4;--border:#DDD9D1;--border-light:#E8E4DC;--text-strong:#1A1714;--text-mid:#3D3830;--text-faint:#8C8278;--radius:8px;--sidebar-w:260px;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -1125,111 +1126,135 @@ function vizOverfitting(containerId){
   el.innerHTML=`
   <div class="viz-wrap">
     <div class="viz-head">
-      <div class="viz-title">Overfitting in Action — Polynomial Degree</div>
+      <div class="viz-title">Overfitting in Action \u2014 Polynomial Degree</div>
       <div class="viz-controls">
         <div class="viz-slider-wrap">
           <span class="viz-label">Degree</span>
-          <input class="viz-slider" type="range" id="ov-deg" min="1" max="12" value="1" step="1">
+          <input class="viz-slider" type="range" id="ov-deg" min="1" max="7" value="1" step="1">
           <span class="viz-val" id="ov-deg-val">1</span>
         </div>
+        <span id="ov-badge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;background:var(--bg-input);color:var(--text-faint);">UNDERFITTING</span>
       </div>
     </div>
-    <canvas class="viz-canvas" id="ov-canvas" height="300" width="600"></canvas>
-    <div class="viz-note">Drag the slider. Degree 1–3 captures the real pattern. Degree 8+ memorises noise — high training accuracy but terrible generalization. The true underlying curve is sin(x).</div>
+    <div style="display:flex;gap:20px;padding:6px 18px 0;font-size:11px;font-family:'Geist Mono',monospace;color:var(--text-faint);">
+      <span>Train RMSE: <span id="ov-tr" style="color:var(--text-strong);">-</span></span>
+      <span>Test RMSE: <span id="ov-te" style="color:var(--text-strong);">-</span></span>
+    </div>
+    <div style="position:relative;width:100%;height:280px;padding:0 8px 8px;">
+      <canvas id="ov-chart" role="img" aria-label="Polynomial curve fitting showing overfitting at high degrees"></canvas>
+    </div>
+    <div class="viz-note">Degree 1: straight line \u2014 underfitting. Degree 3: captures the shape well. Degree 7: passes through every training point exactly (Train RMSE = 0.000) but wiggles wildly between them \u2014 perfect memorisation, terrible generalisation.</div>
   </div>`;
 
-  // Fixed training data with noise
-  const seed=[0.3,1.1,1.8,2.3,2.9,3.6,4.2,4.8,5.3,5.9,6.5,7.0,7.8,8.3];
-  const noises=[-0.15,0.22,-0.18,0.30,-0.08,0.25,-0.20,0.18,-0.28,0.12,0.30,-0.22,0.15,-0.10];
-  const trainX=seed, trainY=seed.map((x,i)=>Math.sin(x)*0.8+0.5+noises[i]);
-  const testX=[1.5,3.2,4.5,6.0,7.5], testY=testX.map(x=>Math.sin(x)*0.8+0.5);
+  const N=8, lo=0.5, hi=7.5, mid=(lo+hi)/2, half=(hi-lo)/2;
+  const TX=Array.from({length:N},(_,k)=>mid+half*Math.cos(Math.PI*(2*(N-1-k)+1)/(2*N)));
+  const TN=[0.10,-0.14,0.18,-0.12,0.16,-0.18,0.13,-0.10];
+  const TY=TX.map((x,i)=>Math.sin(x)*0.85+0.55+TN[i]);
+  const testX=[1.0,2.0,3.2,4.0,5.1,6.2,7.0];
+  const testY=testX.map(x=>Math.sin(x)*0.85+0.55);
 
-  function polyFit(X,Y,deg){
-    const n=X.length, k=deg+1;
-    const F=X.map(x=>Array.from({length:k},(_,i)=>Math.pow(x,i)));
-    const FtF=Array.from({length:k},(_,a)=>Array.from({length:k},(_,b)=>F.reduce((s,r)=>s+r[a]*r[b],0)));
-    const FtY=Array.from({length:k},(_,a)=>F.reduce((s,r,i)=>s+r[a]*Y[i],0));
-    // Gauss-Jordan
-    const m=FtF.map((r,i)=>[...r,FtY[i]]);
+  function lagrange(xq){
+    let r=0;
+    for(let i=0;i<N;i++){
+      let t=TY[i];
+      for(let j=0;j<N;j++) if(j!==i) t*=(xq-TX[j])/(TX[i]-TX[j]);
+      r+=t;
+    }
+    return r;
+  }
+
+  function chebBasis(t,k){
+    const T=[1]; if(k===0) return T;
+    T.push(t);
+    for(let i=2;i<=k;i++) T.push(2*t*T[i-1]-T[i-2]);
+    return T;
+  }
+
+  function fitLS(deg){
+    const k=deg+1;
+    const tn=TX.map(x=>2*(x-lo)/(hi-lo)-1);
+    const F=tn.map(t=>chebBasis(t,deg));
+    const A=Array.from({length:k},(_,a)=>[
+      ...Array.from({length:k},(_,b)=>F.reduce((s,r)=>s+r[a]*r[b],0)),
+      F.reduce((s,r,i)=>s+r[a]*TY[i],0)
+    ]);
     for(let c=0;c<k;c++){
-      const pv=m.slice(c).reduce((bi,r,i)=>Math.abs(r[c])>Math.abs(m[c+bi][c])?i:bi,0);
-      [m[c],m[c+pv]]=[m[c+pv],m[c]];
-      for(let r=0;r<k;r++) if(r!==c&&m[c][c]!==0){
-        const f=m[r][c]/m[c][c]; m[r]=m[r].map((v,j)=>v-f*m[c][j]);
+      let pr=c,pv=0;
+      for(let r=c;r<k;r++) if(Math.abs(A[r][c])>pv){pv=Math.abs(A[r][c]);pr=r;}
+      if(pv<1e-12) return null;
+      [A[c],A[pr]]=[A[pr],A[c]];
+      const inv=1/A[c][c];
+      for(let j=c;j<=k;j++) A[c][j]*=inv;
+      for(let r=0;r<k;r++){
+        if(r===c) continue;
+        const f=A[r][c];
+        for(let j=c;j<=k;j++) A[r][j]-=f*A[c][j];
       }
     }
-    return m.map((r,i)=>r[k]/r[i]||0);
-  }
-  function polyEval(coefs,x){return coefs.reduce((s,c,i)=>s+c*Math.pow(x,i),0);}
-  function rmse(coefs,X,Y){return Math.sqrt(X.reduce((s,x,i)=>s+Math.pow(polyEval(coefs,x)-Y[i],2),0)/X.length);}
-
-  const degSlider=document.getElementById('ov-deg');
-  const degVal=document.getElementById('ov-deg-val');
-
-  function draw(){
-    const ctx=getCanvas('ov-canvas',600,300);
-    if(!ctx) return;
-    const {cw,ch}=ctx;
-    ctx.clearRect(0,0,cw,ch);
-    const pad=40, W=cw-pad*2, H=ch-pad*2;
-    const xmin=0,xmax=9,ymin=-0.4,ymax=1.6;
-    const deg=parseInt(degSlider.value);
-    degVal.textContent=deg;
-
-    function px(xv){return pad+W*(xv-xmin)/(xmax-xmin);}
-    function py(yv){return pad+H*(1-(yv-ymin)/(ymax-ymin));}
-
-    let coefs;
-    try{ coefs=polyFit(trainX,trainY,deg); } catch(e){ coefs=[0.5]; }
-
-    // True curve
-    ctx.beginPath();
-    for(let i=0;i<=200;i++){
-      const xv=xmin+i*(xmax-xmin)/200;
-      const yv=Math.sin(xv)*0.8+0.5;
-      i===0?ctx.moveTo(px(xv),py(yv)):ctx.lineTo(px(xv),py(yv));
-    }
-    ctx.strokeStyle='rgba(45,85,68,0.4)'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]); ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Fitted curve
-    ctx.beginPath();
-    for(let i=0;i<=300;i++){
-      const xv=xmin+i*(xmax-xmin)/300;
-      const yv=polyEval(coefs,xv);
-      if(yv<ymin-1||yv>ymax+1){ctx.beginPath();continue;}
-      i===0?ctx.moveTo(px(xv),py(yv)):ctx.lineTo(px(xv),py(yv));
-    }
-    const isOverfit=deg>5;
-    ctx.strokeStyle=isOverfit?'#B85C38':'#1A3D5C'; ctx.lineWidth=2.5; ctx.stroke();
-
-    // Training points
-    trainX.forEach((x,i)=>{
-      ctx.beginPath(); ctx.arc(px(x),py(trainY[i]),5,0,Math.PI*2);
-      ctx.fillStyle='#1A1714'; ctx.fill();
-    });
-
-    // Legend & metrics
-    const trErr=rmse(coefs,trainX,trainY);
-    const teErr=rmse(coefs,testX,testY);
-    ctx.fillStyle='#1A1714'; ctx.font='11px Geist Mono,monospace';
-    ctx.fillText(`Train RMSE: ${trErr.toFixed(3)}`,pad+4,pad+14);
-    const teColor=teErr>0.3?'#B85C38':'#2D5544';
-    ctx.fillStyle=teColor;
-    ctx.fillText(`Test  RMSE: ${teErr.toFixed(3)}`,pad+4,pad+28);
-    if(isOverfit){ ctx.fillStyle='#B85C38'; ctx.fillText('OVERFITTING',cw-pad-90,pad+14); }
-
-    // Dashed = true curve label
-    ctx.strokeStyle='rgba(45,85,68,0.4)'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
-    ctx.beginPath(); ctx.moveTo(cw-pad-140,pad+14); ctx.lineTo(cw-pad-120,pad+14); ctx.stroke();
-    ctx.setLineDash([]); ctx.fillStyle='#3A7D55'; ctx.fillText('true sin(x)',cw-pad-115,pad+18);
+    const coefs=A.map(r=>r[k]);
+    return x=>{
+      const t=2*(x-lo)/(hi-lo)-1;
+      return chebBasis(t,deg).reduce((s,v,i)=>s+coefs[i]*v,0);
+    };
   }
 
-  degSlider.oninput=draw;
-  draw();
-  window.addEventListener('resize',draw);
+  function calcRmse(fn,X,Y){return Math.sqrt(X.reduce((s,x,i)=>s+(fn(x)-Y[i])**2,0)/X.length);}
+
+  const xs=Array.from({length:200},(_,i)=>lo+i*(hi-lo)/199);
+  const trueY=xs.map(x=>Math.sin(x)*0.85+0.55);
+
+  const chartInst=new Chart(document.getElementById('ov-chart'),{
+    type:'line',
+    data:{datasets:[
+      {label:'True curve',data:xs.map((x,i)=>({x,y:trueY[i]})),
+       borderColor:'rgba(29,158,117,0.6)',borderWidth:1.5,borderDash:[6,4],
+       pointRadius:0,tension:0.3,fill:false,order:3},
+      {label:'Fitted',data:[],
+       borderColor:'#1A3D5C',borderWidth:2.5,
+       pointRadius:0,tension:0,fill:false,order:2},
+      {label:'Train',data:TX.map((x,i)=>({x,y:TY[i]})),
+       type:'scatter',pointRadius:6,pointBackgroundColor:'#1A1714',
+       pointBorderColor:'white',pointBorderWidth:2,
+       showLine:false,order:1}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:80},
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{
+        x:{type:'linear',min:0,max:8.5,
+           grid:{color:'rgba(128,128,128,0.1)'},
+           ticks:{color:'#8C8278',font:{size:10,family:"'Geist Mono',monospace"},stepSize:1}},
+        y:{type:'linear',min:-0.5,max:1.9,
+           grid:{color:'rgba(128,128,128,0.1)'},
+           ticks:{color:'#8C8278',font:{size:10,family:"'Geist Mono',monospace"},stepSize:0.5}}
+      }
+    }
+  });
+
+  function updateOv(){
+    const deg=parseInt(document.getElementById('ov-deg').value);
+    document.getElementById('ov-deg-val').textContent=deg;
+    const isInterp=deg>=N-1;
+    const fn=isInterp?lagrange:(fitLS(deg)||lagrange);
+    chartInst.data.datasets[1].data=xs.map(x=>({x,y:isFinite(fn(x))?Math.max(-0.7,Math.min(2.1,fn(x))):null}));
+    const isOver=deg>=5,isUnder=deg<=1;
+    chartInst.data.datasets[1].borderColor=isOver?'#B85C38':isUnder?'#9B8E84':'#1A3D5C';
+    chartInst.update('none');
+    const tr=calcRmse(fn,TX,TY).toFixed(3);
+    const te=calcRmse(fn,testX,testY).toFixed(3);
+    document.getElementById('ov-tr').textContent=tr;
+    const teEl=document.getElementById('ov-te');
+    teEl.textContent=te;
+    teEl.style.color=parseFloat(te)>parseFloat(tr)*1.5?'#B85C38':'var(--text-strong)';
+    const badge=document.getElementById('ov-badge');
+    if(isOver||isInterp){badge.textContent=isInterp?'INTERPOLATION':'OVERFITTING';badge.style.background='#FDF0EC';badge.style.color='#B85C38';}
+    else if(isUnder){badge.textContent='UNDERFITTING';badge.style.background='var(--bg-input)';badge.style.color='var(--text-faint)';}
+    else{badge.textContent='GOOD FIT';badge.style.background='#EDF5F0';badge.style.color='#2D6B4A';}
+  }
+  document.getElementById('ov-deg').addEventListener('input',updateOv);
+  updateOv();
 }
-
 // ──────────────────────────────────────────────────────────────────────────
 // MODEL EVALUATION — Bias-Variance Tradeoff Curve
 // ──────────────────────────────────────────────────────────────────────────
