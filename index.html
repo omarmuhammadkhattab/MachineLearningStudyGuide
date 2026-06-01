@@ -73,6 +73,10 @@ html,body{height:100%;font-family:'Geist',sans-serif;background:var(--bg);color:
 .sb-item-tag{font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--bg);background:var(--text-strong);padding:2px 8px 3px;border-radius:4px;flex-shrink:0;}
 .sb-item-desc{font-size:13.5px;color:var(--text-mid);font-weight:500;}
 .sb-item-body{padding:8px 12px;border-left:2px solid var(--border);margin-left:2px;font-size:13px;line-height:1.8;color:var(--text-mid);white-space:pre-line;}
+.sb-ol{margin:10px 0 14px 18px;display:flex;flex-direction:column;gap:6px;}
+.sb-ol li{font-size:13.5px;color:var(--text-mid);line-height:1.7;padding-left:4px;}
+.sb-ul{margin:10px 0 14px 22px;display:flex;flex-direction:column;gap:5px;list-style:disc;}
+.sb-ul li{font-size:13.5px;color:var(--text-mid);line-height:1.7;}
 .kp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
 .kp-card{border:1px solid var(--border);border-radius:var(--radius);padding:18px;background:var(--bg-panel);}
 .kp-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px;font-family:'Geist Mono',monospace;}
@@ -1775,11 +1779,31 @@ function renderMain(){
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function isCapHeader(s){
-  return /^[A-Z][A-Z\s'\d\-\(\)\/]{3,}[\u2014:]/.test(s)&&(s.match(/[A-Z]/g)||[]).length>=3;
+  const em=s.indexOf('\u2014'),col=s.indexOf(':');
+  let sep=em!==-1?em:col;
+  if(em!==-1&&col!==-1) sep=Math.min(em,col);
+  if(sep===-1) return false;
+  const label=s.slice(0,sep).trim();
+  if(!label||!label[0].match(/[A-Z]/)) return false;
+  if(label.length>32) return false;
+  if(label.includes('$')) return false; // math defs are prose
+  const firstWord=label.split(/[\s\(]/)[0];
+  if(!firstWord||firstWord!==firstWord.toUpperCase()||firstWord.length<2) return false;
+  if((label.match(/[A-Z]/g)||[]).length<3) return false;
+  const after=s.slice(sep+1).trimStart();
+  const capsWords=after.split(/\s+/).slice(0,4).filter(w=>w===w.toUpperCase()&&w.length>2).length;
+  if(capsWords>=2) return false;
+  return true;
 }
+
 function extractTag(s){
-  const em=s.indexOf('\u2014');
-  if(em!==-1){const a=s.slice(em+1).trimStart();if(/[a-z]/.test(a.slice(0,8)))return[s.slice(0,em).trim(),a];}
+  const em=s.indexOf('\u2014'), col=s.indexOf(':');
+  if(em!==-1){
+    // If there's a colon before the emdash, use colon as the tag boundary
+    if(col!==-1&&col<em) return[s.slice(0,col).trim(), s.slice(col+1).trim()];
+    // Otherwise split at emdash
+    return[s.slice(0,em).trim(), s.slice(em+1).trimStart()];
+  }
   const m=s.match(/^(.+?):\s+(.+)$/);
   if(m) return[m[1].trim(),m[2].trim()];
   return[s.replace(/[:\u2014]\s*$/,'').trim(),''];
@@ -1791,10 +1815,12 @@ function formatBody(raw){
   while(i<lines.length){
     const line=lines[i],t=line.trim();
     if(!t){i++;continue;}
-    // Display math block: line starts and ends with $$
+
+    // Display math block: $$ ... $$ on its own line
     if(t.startsWith('$$')&&t.endsWith('$$')&&t.length>4){
       html+=`<div class="math-block">${t}</div>`;i++;continue;
     }
+
     // Indented block
     if(/^  +\S/.test(line)&&!isCapHeader(t)){
       const block=[];
@@ -1809,12 +1835,31 @@ function formatBody(raw){
         const mi=Math.min(...block.filter(l=>l.trim()).map(l=>l.match(/^ */)[0].length));
         const dd=block.map(l=>l.slice(mi)).join('\n');
         const hasMath=dd.includes('$$')||/\$[^\s$]/.test(dd);
-        if(hasMath) html+=`<div class="math-block">${dd}</div>`;
-        else html+=`<div class="sb-code">${esc(dd)}</div>`;
+        // Check if it's a numbered or bullet list (render as list, not code)
+        const lines2=dd.split('\n').filter(l=>l.trim());
+        const isNumbered=lines2.length>0&&lines2.every(l=>/^\d+\.\s/.test(l.trim())||!l.trim());
+        const isBullet=lines2.length>0&&lines2.every(l=>/^-\s/.test(l.trim())||!l.trim());
+        if(isNumbered){
+          const items=lines2.map(l=>{
+            const text=l.trim().replace(/^\d+\.\s+/,'');
+            const emIdx=text.indexOf('\u2014');
+            if(emIdx!==-1) return '<strong>'+esc(text.slice(0,emIdx).trim())+'</strong> \u2014 '+text.slice(emIdx+1).trim();
+            return text;
+          });
+          html+=`<ol class="sb-ol">${items.map(it=>`<li>${it}</li>`).join('')}</ol>`;
+        } else if(isBullet){
+          const items=lines2.map(l=>l.trim().replace(/^-\s+/,''));
+          html+=`<ul class="sb-ul">${items.map(it=>`<li>${it}</li>`).join('')}</ul>`;
+        } else if(hasMath){
+          html+=`<div class="math-block">${dd}</div>`;
+        } else {
+          html+=`<div class="sb-code">${esc(dd)}</div>`;
+        }
       }
       continue;
     }
-    // ALL-CAPS header
+
+    // ALL-CAPS section header
     if(isCapHeader(t)){
       const[tag,desc]=extractTag(t);i++;
       const body=[];
@@ -1822,14 +1867,101 @@ function formatBody(raw){
       html+=`<div class="sb-item"><div class="sb-item-header"><span class="sb-item-tag">${esc(tag)}</span>${desc?`<span class="sb-item-desc">${desc}</span>`:''}</div>${body.length?`<div class="sb-item-body">${body.join('\n')}</div>`:''}</div>`;
       continue;
     }
-    // Prose (may contain inline $...$)
+
+    // Math-labeled item: "$formula$: description" -> render as labeled item
+    if(/^\$[^$]+\$:/.test(t)){
+      const colonIdx=t.indexOf(':',t.indexOf('$',1));
+      if(colonIdx!==-1){
+        const mathLabel=t.slice(0,colonIdx).trim();
+        const desc=t.slice(colonIdx+1).trim();
+        html+=`<div class="sb-item" style="margin:8px 0"><div class="sb-item-header"><span class="sb-item-tag" style="font-family:'Geist',sans-serif;font-size:11px">${mathLabel}</span>${desc?`<span class="sb-item-desc">${desc}</span>`:''}</div></div>`;
+        i++;continue;
+      }
+    }
+
+    // Bullet list: collect consecutive "- ..." lines into a <ul>
+    if(/^-\s/.test(t)){
+      const items=[];
+      while(i<lines.length){
+        const lt=lines[i].trim();
+        if(!/^-\s/.test(lt)) break;
+        items.push(lt.replace(/^-\s+/,''));
+        i++;
+      }
+      html+=`<ul class="sb-ul">${items.map(it=>`<li>${it}</li>`).join('')}</ul>`;
+      continue;
+    }
+
+    // Numbered list: collect consecutive "N. ..." lines into a <ol>
+    // Blank lines and indented continuation lines between items are allowed
+    if(/^\d+\.\s/.test(t)){
+      const items=[];
+      while(i<lines.length){
+        const lt=lines[i].trim();
+        const raw=lines[i];
+        // Skip blank lines between items
+        if(!lt){i++;continue;}
+        // If next numbered item, collect it
+        if(/^\d+\.\s/.test(lt)){
+          const text=lt.replace(/^\d+\.\s+/,'');
+          // Collect any indented continuation lines for this item
+          i++;
+          const cont=[];
+          while(i<lines.length){
+            const cl=lines[i];
+            if(!cl.trim()){
+              // blank line — peek ahead to see if next non-blank is another numbered item
+              let j=i+1;
+              while(j<lines.length&&!lines[j].trim()) j++;
+              if(j<lines.length&&/^\d+\.\s/.test(lines[j].trim())) break;
+              if(j<lines.length&&/^\d+\.\s/.test(lines[j].trim())) break;
+              i++;continue;
+            }
+            if(/^  +/.test(cl)||/^-\s/.test(cl.trim())) {cont.push(cl.trim());i++;}
+            else break;
+          }
+          // Format: if item has em-dash, bold the label part
+          const emIdx=text.indexOf('\u2014');
+          let itemHtml;
+          if(emIdx!==-1){
+            const lbl=text.slice(0,emIdx).trim();
+            const dsc=text.slice(emIdx+1).trim();
+            itemHtml=`<strong>${esc(lbl)}</strong> \u2014 ${dsc}`;
+          } else {
+            itemHtml=text;
+          }
+          // Append continuation as sub-list if it has bullet items
+          if(cont.length){
+            const bullets=cont.filter(c=>/^-\s/.test(c));
+            const other=cont.filter(c=>!/^-\s/.test(c));
+            if(other.length) itemHtml+=` ${other.join(' ')}`;
+            if(bullets.length) itemHtml+=`<ul class="sb-ul" style="margin-top:4px">${bullets.map(b=>`<li>${b.replace(/^-\s+/,'')}</li>`).join('')}</ul>`;
+          }
+          items.push(itemHtml);
+        } else {
+          // Non-numbered, non-blank line — stop collecting
+          break;
+        }
+      }
+      if(items.length) html+=`<ol class="sb-ol">${items.map(it=>`<li>${it}</li>`).join('')}</ol>`;
+      continue;
+    }
+
+    // Prose (may contain inline $...$) — collect consecutive non-special lines
     const para=[];
     while(i<lines.length){
       const l=lines[i],tt=l.trim();
-      if(!tt||/^  +\S/.test(l)||isCapHeader(tt)||(tt.startsWith('$$')&&tt.endsWith('$$'))) break;
+      if(!tt||/^  +\S/.test(l)||isCapHeader(tt)||(tt.startsWith('$$')&&tt.endsWith('$$'))||/^\d+\.\s/.test(tt)||/^-\s/.test(tt)) break;
       para.push(tt);i++;
     }
-    if(para.length) html+=`<p class="sb-prose">${para.join(' ')}</p>`;
+    if(para.length){
+      let txt=para.join(' ');
+      // Convert **bold** markdown
+      txt=txt.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+      // Convert inline ALL-CAPS emphasis (e.g. "THE TEST SET IS SACRED.")
+      txt=txt.replace(/\b([A-Z]{2,}(?:\s+[A-Z]{2,}){1,})\.?\b/g,'<strong>$1</strong>');
+      html+=`<p class="sb-prose">${txt}</p>`;
+    }
   }
   return html;
 }
