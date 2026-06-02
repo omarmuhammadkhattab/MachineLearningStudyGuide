@@ -335,10 +335,6 @@ html,body{height:100%;font-family:'Geist',sans-serif;background:var(--bg);color:
 .nav-num{font-family:'Geist Mono',monospace;font-size:9px;color:var(--text-faint);min-width:16px;}
 .nav-label{font-size:12.5px;color:var(--text-mid);font-weight:500;}
 .nav-item.active .nav-label{color:var(--text-strong);}
-.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);}
-.progress-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin-bottom:6px;}
-.progress-bar{height:100%;background:var(--text-strong);border-radius:2px;transition:width .4s;}
-.progress-label{font-size:10px;color:var(--text-faint);font-family:'Geist Mono',monospace;}
 .topic-header{padding:40px 48px 28px;border-bottom:1px solid var(--border-light);}
 .topic-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Geist Mono',monospace;color:var(--text-faint);font-weight:500;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em;}
 .topic-dot{width:6px;height:6px;border-radius:50%;}
@@ -469,7 +465,6 @@ canvas.viz-canvas{max-height:260px;}}
 <aside class="sidebar" id="sidebar">
 <div class="brand"><div><div class="brand-text">ML Handbook</div><div class="brand-sub">12 chapters · interactive</div></div></div>
 <nav class="nav-scroll" id="navList"></nav>
-<div class="sidebar-footer"><div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div><div class="progress-label" id="progressLabel">0 / 12 chapters started</div></div>
 </aside>
 <main class="main" id="mainContent"></main>
 </div>
@@ -2387,18 +2382,18 @@ return (summaries[id]||['Core concepts','Visual intuition','Examples','Pitfalls'
 
 // ── STATE ────────────────────────────────────────────────────────────────
 let currentTopic=0,currentTab='explain',quizState={},editors={},started={};
+const topicGroups=[
+  {title:'Foundations', ids:['what-is-ml','linear-regression','logistic-regression']},
+  {title:'Evaluation', ids:['model-evaluation','overfitting']},
+  {title:'Tree Methods', ids:['decision-trees']},
+  {title:'Geometry & Similarity', ids:['distances','knn','clustering']}
+];
+const visibleTopicIds=topicGroups.flatMap(g=>g.ids);
 
 // ── SIDEBAR ──────────────────────────────────────────────────────────────
 
 function renderNav(){
-  const groups=[
-    {title:'Foundations', ids:['what-is-ml','linear-regression','logistic-regression']},
-    {title:'Evaluation', ids:['model-evaluation','overfitting']},
-    {title:'Tree Methods', ids:['decision-trees']},
-    {title:'Geometry & Similarity', ids:['distances','knn','clustering']}
-  ];
-
-  document.getElementById('navList').innerHTML=groups.map(g=>`
+  document.getElementById('navList').innerHTML=topicGroups.map(g=>`
     <div>
       <div class="sidebar-section-title">${g.title}</div>
       ${g.ids.map(id=>{
@@ -2415,9 +2410,6 @@ function renderNav(){
     </div>
   `).join('');
 
-  const n=Object.keys(started).length;
-  document.getElementById('progressBar').style.width=(n/topics.length*100)+'%';
-  document.getElementById('progressLabel').textContent=`${n} / ${topics.length} concepts explored`;
 }
 
 
@@ -2430,7 +2422,7 @@ function renderMain(){
   document.getElementById('mainContent').innerHTML=`
     <div class="topic-header">
       <div>
-        <div class="topic-tag"><span class="topic-dot" style="background:${t.color}"></span>Chapter ${String(currentTopic+1).padStart(2,'0')} of ${topics.length}</div>
+        <div class="topic-tag"><span class="topic-dot" style="background:${t.color}"></span>Chapter ${String(visibleTopicIds.indexOf(t.id)+1).padStart(2,'0')} of ${visibleTopicIds.length}</div>
         <div class="topic-title">${t.label}</div>
         <div class="topic-def">${c.definition}</div>
       </div>
