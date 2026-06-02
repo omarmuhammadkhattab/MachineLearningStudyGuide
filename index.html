@@ -21,75 +21,11 @@
 :root{
 --surface-1:#F7F5F1;
 --surface-2:#F1EEE8;
---surface-3:#E9E4DB;
---accent-soft:#E7E0D3;
---success:#3A7D55;
---danger:#B85C38;
 --content-w:760px;
-}
-
-/* Narrative learning system */
-.learning-flow{
-display:flex;
-align-items:center;
-gap:10px;
-padding:14px 0 24px;
-overflow-x:auto;
-border-bottom:1px solid var(--border-light);
-margin-bottom:28px;
-}
-
-.flow-step{
-display:flex;
-align-items:center;
-gap:8px;
-padding:8px 12px;
-border-radius:999px;
-background:var(--surface-1);
-font-size:12px;
-white-space:nowrap;
-border:1px solid transparent;
-}
-
-.flow-step.active{
-background:var(--text-strong);
-color:var(--bg);
-}
-
-.flow-num{
-font-family:'Geist Mono',monospace;
-font-size:10px;
-opacity:.7;
 }
 
 .content-shell{
 max-width:var(--content-w);
-}
-
-.concept-block{
-margin-bottom:28px;
-}
-
-.concept-intuition{
-background:var(--surface-1);
-padding:14px 16px;
-border-radius:10px;
-margin:14px 0;
-font-size:13px;
-line-height:1.7;
-color:var(--text-mid);
-}
-
-.micro-takeaway{
-display:inline-flex;
-align-items:center;
-gap:8px;
-padding:8px 12px;
-border-radius:999px;
-background:var(--surface-2);
-font-size:11px;
-font-weight:600;
-margin:10px 0 18px;
 }
 
 .transition-next{
@@ -182,9 +118,6 @@ border:none !important;
 max-width:100%;
 }
 
-.learning-flow{
-padding-top:6px;
-}
 }
 
 
@@ -238,43 +171,6 @@ gap:10px;
 font-size:13px;
 line-height:1.5;
 color:var(--text-mid);
-}
-
-.learning-flow{
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:10px;
-max-width:var(--max-content);
-margin:0 auto 20px;
-padding:0 56px;
-}
-
-.flow-step{
-background:white;
-border:1px solid var(--soft-border);
-border-radius:18px;
-padding:16px 18px;
-display:flex;
-flex-direction:column;
-gap:6px;
-box-shadow:var(--shadow);
-min-height:82px;
-}
-
-.flow-step.active{
-background:#111;
-color:white;
-}
-
-.flow-step-title{
-font-size:15px;
-font-weight:600;
-}
-
-.flow-step-desc{
-font-size:11px;
-line-height:1.4;
-opacity:.7;
 }
 
 .tabs{
@@ -378,10 +274,6 @@ grid-template-columns:1fr;
 
 .chapter-panel{
 display:none;
-}
-
-.learning-flow{
-grid-template-columns:1fr;
 }
 
 .topic-title{
@@ -763,14 +655,14 @@ const topics=[
   explanation:[
     {heading:"Euclidean and Manhattan Distance",body:`EUCLIDEAN DISTANCE — the straight-line distance:\n$$d_{\\text{Euclid}}(\\mathbf{a},\\mathbf{b}) = \\sqrt{\\sum_{i=1}^{n}(a_i-b_i)^2}$$\nThe standard choice for continuous numeric features. Sensitive to large differences in any single dimension due to squaring.\n\nMANHATTAN DISTANCE — sum of absolute differences:\n$$d_{\\text{Manhattan}}(\\mathbf{a},\\mathbf{b}) = \\sum_{i=1}^{n}|a_i-b_i|$$\nMore robust to outliers — no squaring. Scales better to high dimensions. For the same two points, Manhattan $\\geq$ Euclidean.`},
     {heading:"Cosine Similarity — Direction Over Magnitude",body:`Cosine similarity measures the angle between two vectors, ignoring their length:\n$$\\cos(\\mathbf{a},\\mathbf{b}) = \\frac{\\mathbf{a}\\cdot\\mathbf{b}}{\\|\\mathbf{a}\\|\\,\\|\\mathbf{b}\\|} = \\frac{\\displaystyle\\sum_i a_i b_i}{\\sqrt{\\displaystyle\\sum_i a_i^2}\\cdot\\sqrt{\\displaystyle\\sum_i b_i^2}}$$\n\nRange: $-1$ (opposite directions) to $+1$ (same direction). $0$ means perpendicular (unrelated).\n\nCosine distance $= 1 - \\cos(\\mathbf{a},\\mathbf{b})$.\n\nWHEN TO USE: text and document similarity, recommendation systems, any sparse high-dimensional data where direction matters more than magnitude.`},
-    {heading:"Feature Scaling and the Curse of Dimensionality",body:`FEATURE SCALING IS MANDATORY:\n  All distance metrics combine feature differences into one number.\n  An unscaled feature with a large range will dominate.\n\nZ-score standardization:\n$$x' = \\frac{x-\\mu}{\\sigma}$$\n\nMin-max scaling:\n$$x' = \\frac{x-x_{\\min}}{x_{\\max}-x_{\\min}}$$\n\nAlways fit the scaler on training data only, then apply to test data.\n\nTHE CURSE OF DIMENSIONALITY:\n  As features grow, all pairwise distances converge — everything becomes equidistant. The concept of "nearest neighbor" breaks down.\n  This is why distance-based algorithms struggle with more than $\\approx 50$–100 features.`}
+    {heading:"Feature Scaling and the Curse of Dimensionality",body:`FEATURE SCALING IS MANDATORY:\n  All distance metrics combine feature differences into one number.\n  An unscaled feature with a large range will dominate.\n\nZ-score standardization:\n$$x' = \\frac{x-\\mu}{\\sigma}$$\n\nMin-max scaling:\n$$x' = \\frac{x-x_{\\min}}{x_{\\max}-x_{\\min}}$$\n\nAlways fit the scaler on training data only, then apply to test data.\n\nTHE CURSE OF DIMENSIONALITY:\n  As features grow, all pairwise distances converge — everything becomes equidistant. The concept of "nearest neighbor" breaks down.\n  This is why distance-based algorithms often struggle once you reach dozens of features, unless the features are carefully selected or reduced.`}
   ],
   keyPoints:[
     {title:"Euclidean Distance",body:"$$d = \\sqrt{\\sum(a_i-b_i)^2}$$\nStraight-line distance. Default for continuous data.\nRequires feature scaling. Sensitive to outliers."},
     {title:"Manhattan Distance",body:"$$d = \\sum|a_i-b_i|$$\nCity-block distance. More robust (no squaring).\nScales better to high dimensions."},
     {title:"Cosine Similarity",body:"$$\\cos = \\frac{\\mathbf{a}\\cdot\\mathbf{b}}{\\|\\mathbf{a}\\|\\|\\mathbf{b}\\|}$$\nMeasures angle — direction, not magnitude.\nStandard for text and document similarity."},
     {title:"Feature Scaling is Mandatory",body:"Z-score: $x' = (x-\\mu)/\\sigma$\nMin-max: $x' = (x-x_{\\min})/(x_{\\max}-x_{\\min})$\nFit scaler on training data only — apply to test."},
-    {title:"Curse of Dimensionality",body:"In high dimensions, all distances converge — everything equidistant.\n'Nearest' loses meaning past $\\approx 50$–100 features.\nUse PCA before distance-based algorithms."},
+    {title:"Curse of Dimensionality",body:"In high dimensions, all distances converge — everything equidistant.\n'Nearest' becomes less meaningful as feature count grows.\nUse PCA before distance-based algorithms."},
     {title:"Choosing a Metric",body:"Continuous, geometric: Euclidean or Manhattan.\nText, sparse, high-dim: Cosine similarity.\nBinary features: Hamming distance.\nWhen unsure: try multiple and compare."}
   ],
   watchOut:"Never apply distance-based algorithms to unscaled features — one of the most common bugs in ML practice. Always fit your scaler on the training set and apply it to the test set. Fitting on the full dataset introduces data leakage: the test set's statistics influence the transformation applied during training.",
@@ -925,47 +817,6 @@ const topics=[
 // ── CODING CHALLENGES ────────────────────────────────────────────────────
 const codingChallenges={
 
-'distances':[
-{
-title:'Implement Euclidean Distance',
-desc:'Compute straight-line distance between two vectors.',
-template:`import math
-
-a = [1, 2, 3]
-b = [4, 6, 8]
-
-distance = math.sqrt(sum((x-y)**2 for x,y in zip(a,b)))
-
-print("Euclidean distance:", round(distance, 3))`
-},
-{
-title:'Implement Manhattan Distance',
-desc:'Compute city-block distance between two vectors.',
-template:`a = [1, 2, 3]
-b = [4, 6, 8]
-
-distance = sum(abs(x-y) for x,y in zip(a,b))
-
-print("Manhattan distance:", distance)`
-},
-{
-title:'Cosine Similarity',
-desc:'Measure similarity based on vector direction rather than magnitude.',
-template:`import math
-
-a = [1, 2, 3]
-b = [2, 4, 6]
-
-dot = sum(x*y for x,y in zip(a,b))
-norm_a = math.sqrt(sum(x*x for x in a))
-norm_b = math.sqrt(sum(y*y for y in b))
-
-cosine = dot / (norm_a * norm_b)
-
-print("Cosine similarity:", round(cosine, 3))`
-}
-],
-
 'what-is-ml':[{title:"Classify ML Tasks by Paradigm",desc:"Given a list of ML tasks, classify each as supervised, unsupervised, semi-supervised, or reinforcement learning.",template:`def classify(task):
     tasks = {
         "spam detection with labeled emails": "supervised",
@@ -1116,7 +967,7 @@ print(f"Best split: age <= {t}")
 print(f"Information Gain: {gain:.4f}")
 print(f"Left  (<= {t}): {L}  Gini={gini(L):.4f}")
 print(f"Right (>  {t}): {R}  Gini={gini(R):.4f}")`}],
-'distances':[{title:"Distance Metrics Comparison",desc:"Implement Euclidean, Manhattan, and Cosine distance and compare them.",template:`import math
+'distances':[{title:"Distance Metrics Comparison",desc:"Implement Euclidean distance, Manhattan distance, and cosine similarity, then compare them.",template:`import math
 
 def euclidean(a,b): return math.sqrt(sum((x-y)**2 for x,y in zip(a,b)))
 def manhattan(a,b): return sum(abs(x-y) for x,y in zip(a,b))
@@ -1136,15 +987,22 @@ pts=[[25,30000],[27,31000],[55,90000],[57,92000]]
 std=standardize(pts)
 lab=["Young A","Young B","Senior A","Senior B"]
 
-print("=== Euclidean (UNSCALED) ===")
-for i in range(len(pts)):
-    for j in range(i+1,len(pts)):
-        print(f"  {lab[i]:<10} <-> {lab[j]:<10}: {euclidean(pts[i],pts[j]):.0f}")
-print()
-print("=== Euclidean (SCALED) ===")
-for i in range(len(std)):
-    for j in range(i+1,len(std)):
-        print(f"  {lab[i]:<10} <-> {lab[j]:<10}: {euclidean(std[i],std[j]):.3f}")`}],
+def compare(points, metric, name, digits=3):
+    print(f"=== {name} ===")
+    for i in range(len(points)):
+        for j in range(i+1,len(points)):
+            d=metric(points[i],points[j])
+            shown=round(d,digits)
+            print(f"  {lab[i]:<10} <-> {lab[j]:<10}: {shown}")
+    print()
+
+compare(pts, euclidean, "Euclidean distance (UNSCALED)", 0)
+compare(pts, manhattan, "Manhattan distance (UNSCALED)", 0)
+compare(std, euclidean, "Euclidean distance (SCALED)")
+compare(std, manhattan, "Manhattan distance (SCALED)")
+compare(std, cosine, "Cosine similarity (SCALED)")
+
+print("Note: cosine is similarity, so higher means more alike.")`}],
 'knn':[{title:"KNN Classifier from Scratch",desc:"Implement a KNN classifier using Euclidean distance. Test with different values of K.",template:`import math
 
 def eu(a,b): return math.sqrt(sum((x-y)**2 for x,y in zip(a,b)))
@@ -2742,7 +2600,6 @@ function formatBody(raw){
               let j=i+1;
               while(j<lines.length&&!lines[j].trim()) j++;
               if(j<lines.length&&/^\d+\.\s/.test(lines[j].trim())) break;
-              if(j<lines.length&&/^\d+\.\s/.test(lines[j].trim())) break;
               i++;continue;
             }
             if(/^  +/.test(cl)||/^-\s/.test(cl.trim())) {cont.push(cl.trim());i++;}
@@ -2845,7 +2702,7 @@ function renderPractice(id,c){
 
 function renderResult(id,c){
   const st=quizState[id],n=c.questions.length,pct=Math.round(st.score/n*100);
-  const msg=pct>=80?'Strong work.':pct>=60?'Good foundation &#8212; review the misses.':'Review the Deep Dive tab and try again.';
+  const msg=pct>=80?'Strong work.':pct>=60?'Good foundation &#8212; review the misses.':'Review the Learn tab and try again.';
   return`<div class="quiz-result">
     <div class="result-score">${st.score}/${n}</div>
     <div class="result-label">${pct}% &#8212; ${msg}</div>
