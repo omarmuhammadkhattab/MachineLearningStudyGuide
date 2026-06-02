@@ -17,6 +17,415 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--bg:#FAF9F7;--bg-panel:#F4F2EE;--bg-input:#EDEAE4;--border:#DDD9D1;--border-light:#E8E4DC;--text-strong:#1A1714;--text-mid:#3D3830;--text-faint:#8C8278;--radius:8px;--sidebar-w:260px;}
+
+:root{
+--surface-1:#F7F5F1;
+--surface-2:#F1EEE8;
+--surface-3:#E9E4DB;
+--accent-soft:#E7E0D3;
+--success:#3A7D55;
+--danger:#B85C38;
+--content-w:760px;
+}
+
+/* Narrative learning system */
+.learning-flow{
+display:flex;
+align-items:center;
+gap:10px;
+padding:14px 0 24px;
+overflow-x:auto;
+border-bottom:1px solid var(--border-light);
+margin-bottom:28px;
+}
+
+.flow-step{
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px 12px;
+border-radius:999px;
+background:var(--surface-1);
+font-size:12px;
+white-space:nowrap;
+border:1px solid transparent;
+}
+
+.flow-step.active{
+background:var(--text-strong);
+color:var(--bg);
+}
+
+.flow-num{
+font-family:'Geist Mono',monospace;
+font-size:10px;
+opacity:.7;
+}
+
+.content-shell{
+max-width:var(--content-w);
+}
+
+.concept-block{
+margin-bottom:28px;
+}
+
+.concept-intuition{
+background:var(--surface-1);
+padding:14px 16px;
+border-radius:10px;
+margin:14px 0;
+font-size:13px;
+line-height:1.7;
+color:var(--text-mid);
+}
+
+.micro-takeaway{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:8px 12px;
+border-radius:999px;
+background:var(--surface-2);
+font-size:11px;
+font-weight:600;
+margin:10px 0 18px;
+}
+
+.transition-next{
+margin-top:24px;
+padding:16px 18px;
+background:var(--surface-1);
+border-radius:12px;
+font-size:13px;
+line-height:1.7;
+}
+
+.section,
+.kp-card,
+.challenge-card,
+.viz-wrap,
+.explanation,
+.watch-out-box{
+border:none !important;
+box-shadow:0 1px 0 rgba(0,0,0,.03);
+background:var(--surface-1);
+}
+
+.section-body{
+background:transparent !important;
+}
+
+.tab-content{
+padding-top:24px !important;
+}
+
+.topic-header{
+padding-bottom:20px !important;
+}
+
+.tabs{
+position:sticky;
+top:0;
+z-index:20;
+backdrop-filter:blur(10px);
+background:rgba(250,249,247,.92) !important;
+}
+
+.sidebar-section-title{
+padding:18px 16px 8px;
+font-size:10px;
+font-family:'Geist Mono',monospace;
+letter-spacing:.12em;
+text-transform:uppercase;
+color:var(--text-faint);
+}
+
+.nav-item{
+border-radius:10px;
+margin:2px 10px;
+}
+
+.quiz-progress,
+.question-card,
+.kp-grid,
+.sections,
+.coding-challenges{
+max-width:var(--content-w);
+}
+
+.viz-wrap,
+.challenge-card{
+overflow:hidden;
+}
+
+.section-head{
+background:transparent !important;
+}
+
+.section-head:hover{
+background:var(--surface-2) !important;
+}
+
+.math-block{
+background:var(--surface-2) !important;
+border:none !important;
+}
+
+@media(max-width:768px){
+.content-shell,
+.quiz-progress,
+.question-card,
+.kp-grid,
+.sections,
+.coding-challenges{
+max-width:100%;
+}
+
+.learning-flow{
+padding-top:6px;
+}
+}
+
+
+/* ===== Calm UI Refinement ===== */
+
+:root{
+--card:#FFFFFF;
+--surface:#FCFBF9;
+--surface-2:#F6F3EE;
+--soft-border:#E8E3DA;
+--shadow:0 1px 2px rgba(0,0,0,.03),0 8px 24px rgba(0,0,0,.025);
+--max-content:1180px;
+}
+
+.main{
+background:#FBFAF8;
+}
+
+.topic-header{
+max-width:var(--max-content);
+margin:0 auto;
+padding:48px 56px 28px !important;
+display:grid;
+grid-template-columns:minmax(0,1fr) 260px;
+gap:40px;
+align-items:start;
+}
+
+.chapter-panel{
+background:white;
+border:1px solid var(--soft-border);
+border-radius:18px;
+padding:22px 24px;
+box-shadow:var(--shadow);
+}
+
+.chapter-panel-title{
+font-size:14px;
+font-weight:700;
+margin-bottom:14px;
+}
+
+.chapter-panel ul{
+padding-left:18px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.chapter-panel li{
+font-size:13px;
+line-height:1.5;
+color:var(--text-mid);
+}
+
+.learning-flow{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:10px;
+max-width:var(--max-content);
+margin:0 auto 20px;
+padding:0 56px;
+}
+
+.flow-step{
+background:white;
+border:1px solid var(--soft-border);
+border-radius:18px;
+padding:16px 18px;
+display:flex;
+flex-direction:column;
+gap:6px;
+box-shadow:var(--shadow);
+min-height:82px;
+}
+
+.flow-step.active{
+background:#111;
+color:white;
+}
+
+.flow-step-title{
+font-size:15px;
+font-weight:600;
+}
+
+.flow-step-desc{
+font-size:11px;
+line-height:1.4;
+opacity:.7;
+}
+
+.tabs{
+max-width:var(--max-content);
+margin:0 auto;
+padding:0 56px !important;
+background:transparent !important;
+position:relative !important;
+}
+
+.tab-content{
+max-width:var(--max-content);
+margin:0 auto;
+padding:24px 56px 60px !important;
+}
+
+.section,
+.kp-card,
+.challenge-card,
+.viz-wrap,
+.explanation,
+.watch-out-box{
+background:white !important;
+border:1px solid var(--soft-border) !important;
+border-radius:18px !important;
+box-shadow:var(--shadow) !important;
+}
+
+.section{
+margin-bottom:16px !important;
+overflow:hidden;
+}
+
+.section-head{
+padding:18px 22px !important;
+}
+
+.section-body{
+padding:24px 26px 30px !important;
+}
+
+.topic-title{
+font-size:56px !important;
+line-height:.95;
+letter-spacing:-2px !important;
+margin-bottom:18px !important;
+}
+
+.topic-def{
+font-size:18px !important;
+line-height:1.75 !important;
+max-width:760px !important;
+}
+
+.topic-tag{
+background:white;
+border:1px solid var(--soft-border);
+border-radius:999px;
+padding:10px 14px;
+width:max-content;
+box-shadow:var(--shadow);
+}
+
+.viz-wrap{
+overflow:hidden;
+}
+
+.viz-head{
+padding:18px 22px !important;
+background:#FCFBF9;
+}
+
+canvas.viz-canvas{
+background-color:#FCFBF9;
+background-image:
+linear-gradient(to right,#ECE7DE 1px,transparent 1px),
+linear-gradient(to bottom,#ECE7DE 1px,transparent 1px);
+background-size:48px 48px;
+}
+
+.viz-note{
+padding:14px 18px !important;
+background:#F7FAFF;
+border-top:1px solid #DCE7F5 !important;
+font-size:13px !important;
+}
+
+.sidebar{
+background:#F7F4EF !important;
+}
+
+.nav-item{
+border-radius:12px;
+margin:2px 10px;
+}
+
+@media(max-width:980px){
+.topic-header{
+grid-template-columns:1fr;
+}
+
+.chapter-panel{
+display:none;
+}
+
+.learning-flow{
+grid-template-columns:1fr;
+}
+
+.topic-title{
+font-size:42px !important;
+}
+}
+
+
+.tabs{
+margin-top:8px !important;
+border-top:1px solid var(--soft-border);
+}
+
+.topic-header{
+padding-bottom:12px !important;
+}
+
+
+/* Modern Scrollbar */
+
+::-webkit-scrollbar{
+width:10px;
+height:10px;
+}
+
+::-webkit-scrollbar-track{
+background:#F3EFE8;
+}
+
+::-webkit-scrollbar-thumb{
+background:#CFC7BA;
+border-radius:999px;
+border:2px solid #F3EFE8;
+}
+
+::-webkit-scrollbar-thumb:hover{
+background:#B7AE9F;
+}
+
+*{
+scrollbar-width:thin;
+scrollbar-color:#CFC7BA #F3EFE8;
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'Geist',sans-serif;background:var(--bg);color:var(--text-strong);}
 .app{display:flex;height:100vh;overflow:hidden;}
@@ -515,6 +924,48 @@ const topics=[
 
 // ── CODING CHALLENGES ────────────────────────────────────────────────────
 const codingChallenges={
+
+'distances':[
+{
+title:'Implement Euclidean Distance',
+desc:'Compute straight-line distance between two vectors.',
+template:`import math
+
+a = [1, 2, 3]
+b = [4, 6, 8]
+
+distance = math.sqrt(sum((x-y)**2 for x,y in zip(a,b)))
+
+print("Euclidean distance:", round(distance, 3))`
+},
+{
+title:'Implement Manhattan Distance',
+desc:'Compute city-block distance between two vectors.',
+template:`a = [1, 2, 3]
+b = [4, 6, 8]
+
+distance = sum(abs(x-y) for x,y in zip(a,b))
+
+print("Manhattan distance:", distance)`
+},
+{
+title:'Cosine Similarity',
+desc:'Measure similarity based on vector direction rather than magnitude.',
+template:`import math
+
+a = [1, 2, 3]
+b = [2, 4, 6]
+
+dot = sum(x*y for x,y in zip(a,b))
+norm_a = math.sqrt(sum(x*x for x in a))
+norm_b = math.sqrt(sum(y*y for y in b))
+
+cosine = dot / (norm_a * norm_b)
+
+print("Cosine similarity:", round(cosine, 3))`
+}
+],
+
 'what-is-ml':[{title:"Classify ML Tasks by Paradigm",desc:"Given a list of ML tasks, classify each as supervised, unsupervised, semi-supervised, or reinforcement learning.",template:`def classify(task):
     tasks = {
         "spam detection with labeled emails": "supervised",
@@ -1710,6 +2161,262 @@ function vizDecisionTree(containerId){
 }
 
 // ──────────────────────────────────────────────────────────────────────────
+
+
+
+function vizDistances(containerId){
+const container=document.getElementById(containerId);
+if(!container) return;
+
+container.innerHTML=`
+<div class="concept-card">
+
+  <div class="section">
+    <div class="section-body">
+
+      <h3 style="font-size:32px;margin-bottom:18px;letter-spacing:-1px;">
+        What Are Distances?
+      </h3>
+
+      <div style="font-size:15px;line-height:1.9;color:var(--text-mid);margin-bottom:20px;">
+        Distance metrics quantify how far apart two points are in feature space.
+        Different metrics create different notions of similarity.
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div style="display:flex;gap:12px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#2F7D4A;margin-top:8px;"></div>
+          <div style="font-size:14px;line-height:1.7;">
+            <strong>Euclidean</strong> measures direct straight-line distance.
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#4B83F5;margin-top:8px;"></div>
+          <div style="font-size:14px;line-height:1.7;">
+            <strong>Manhattan</strong> measures movement across a grid.
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#A17CEB;margin-top:8px;"></div>
+          <div style="font-size:14px;line-height:1.7;">
+            <strong>Chebyshev</strong> measures the maximum directional difference.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="key-takeaway">
+        <strong>Key takeaway:</strong>
+        The metric you choose changes what the algorithm considers “close”.
+      </div>
+
+    </div>
+  </div>
+
+  <div class="viz-wrap">
+
+    <div class="viz-head">
+      <div>
+        <div class="viz-title">Visualizing Distance Metrics</div>
+        <div style="font-size:13px;color:var(--text-faint);margin-top:4px;">
+          Adjust the points to build geometric intuition.
+        </div>
+      </div>
+    </div>
+
+    <canvas id="distanceCanvas" class="viz-canvas" width="760" height="420"></canvas>
+
+    <div style="display:grid;grid-template-columns:260px 1fr 220px;gap:18px;padding:20px;">
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div style="font-size:13px;font-weight:600;">Adjust Point A</div>
+
+        <div>
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">x</div>
+          <input id="ax" type="range" min="-3" max="5" step="0.5" value="-1" style="width:100%;">
+        </div>
+
+        <div>
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">y</div>
+          <input id="ay" type="range" min="-3" max="5" step="0.5" value="1" style="width:100%;">
+        </div>
+
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div style="font-size:13px;font-weight:600;">Adjust Point B</div>
+
+        <div>
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">x</div>
+          <input id="bx" type="range" min="-3" max="5" step="0.5" value="3" style="width:100%;">
+        </div>
+
+        <div>
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">y</div>
+          <input id="by" type="range" min="-3" max="5" step="0.5" value="2" style="width:100%;">
+        </div>
+
+      </div>
+
+      <div style="display:flex;flex-direction:column;border-left:1px solid var(--border-light);padding-left:18px;">
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">
+            Euclidean (L2)
+          </div>
+          <div id="euclideanVal" style="font-size:28px;font-weight:700;color:#2F7D4A;">
+            0
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">
+            Manhattan (L1)
+          </div>
+          <div id="manhattanVal" style="font-size:28px;font-weight:700;color:#4B83F5;">
+            0
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">
+            Chebyshev (L∞)
+          </div>
+          <div id="chebyshevVal" style="font-size:28px;font-weight:700;color:#A17CEB;">
+            0
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="viz-note">
+      Observation: Different metrics capture different notions of similarity and movement.
+    </div>
+
+  </div>
+
+</div>
+`;
+
+const canvas=document.getElementById('distanceCanvas');
+const ctx=canvas.getContext('2d');
+
+const inputs={
+ax:document.getElementById('ax'),
+ay:document.getElementById('ay'),
+bx:document.getElementById('bx'),
+by:document.getElementById('by')
+};
+
+function scaleX(x){
+return 120 + ((x+3)/8)*520;
+}
+
+function scaleY(y){
+return 340 - ((y+3)/8)*260;
+}
+
+function euclidean(a,b){
+return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2);
+}
+
+function manhattan(a,b){
+return Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+}
+
+function chebyshev(a,b){
+return Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
+}
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+for(let i=0;i<canvas.width;i+=48){
+ctx.strokeStyle='#ECE7DE';
+ctx.beginPath();
+ctx.moveTo(i,0);
+ctx.lineTo(i,canvas.height);
+ctx.stroke();
+}
+
+for(let i=0;i<canvas.height;i+=48){
+ctx.beginPath();
+ctx.moveTo(0,i);
+ctx.lineTo(canvas.width,i);
+ctx.stroke();
+}
+
+const A={
+x:parseFloat(inputs.ax.value),
+y:parseFloat(inputs.ay.value)
+};
+
+const B={
+x:parseFloat(inputs.bx.value),
+y:parseFloat(inputs.by.value)
+};
+
+const p1={x:scaleX(A.x),y:scaleY(A.y)};
+const p2={x:scaleX(B.x),y:scaleY(B.y)};
+
+ctx.strokeStyle='#2F7D4A';
+ctx.lineWidth=4;
+
+ctx.beginPath();
+ctx.moveTo(p1.x,p1.y);
+ctx.lineTo(p2.x,p2.y);
+ctx.stroke();
+
+ctx.strokeStyle='#4B83F5';
+ctx.lineWidth=3;
+ctx.setLineDash([8,8]);
+
+ctx.beginPath();
+ctx.moveTo(p1.x,p1.y);
+ctx.lineTo(p2.x,p1.y);
+ctx.lineTo(p2.x,p2.y);
+ctx.stroke();
+
+ctx.setLineDash([]);
+
+ctx.fillStyle='#111';
+
+ctx.beginPath();
+ctx.arc(p1.x,p1.y,9,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle='#2F7D4A';
+
+ctx.beginPath();
+ctx.arc(p2.x,p2.y,9,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle='#111';
+ctx.font='14px Geist';
+
+ctx.fillText(`A (${A.x}, ${A.y})`, p1.x-25, p1.y-18);
+ctx.fillText(`B (${B.x}, ${B.y})`, p2.x-25, p2.y-18);
+
+document.getElementById('euclideanVal').textContent=euclidean(A,B).toFixed(2);
+document.getElementById('manhattanVal').textContent=manhattan(A,B).toFixed(2);
+document.getElementById('chebyshevVal').textContent=chebyshev(A,B).toFixed(2);
+}
+
+Object.values(inputs).forEach(i=>{
+i.addEventListener('input',draw);
+});
+
+draw();
+}
+
 // vizRenderers registry
 // ──────────────────────────────────────────────────────────────────────────
 const vizRenderers={
@@ -1718,6 +2425,7 @@ const vizRenderers={
   'model-evaluation': (id)=>vizBiasVariance(id),
   'overfitting': (id)=>vizOverfitting(id),
   'decision-trees': (id)=>vizDecisionTree(id),
+  'distances': (id)=>vizDistances(id),
   'knn': (id)=>vizKNN(id),
   'clustering': (id)=>vizKMeans(id),
 };
@@ -1729,21 +2437,131 @@ function initViz(topicId){
   vizRenderers[topicId](container.id);
 }
 
+
+function getNarrativeTransition(id){
+const transitions={
+'what-is-ml':'Now that you understand what machine learning is, the next step is learning how models actually fit patterns in data. We begin with the simplest predictive model: Linear Regression.',
+'linear-regression':'Linear regression predicts continuous values. But what if the output is categorical — spam or not spam, fraud or legitimate? That leads directly into Logistic Regression.',
+'logistic-regression':'A model that predicts probabilities is useless unless we know how to evaluate it correctly. Next: Model Evaluation and the accuracy trap.',
+'model-evaluation':'Once you know how to measure performance, the next challenge is controlling overfitting and achieving generalization.',
+'overfitting':'One way to combat overfitting while preserving power is through ensemble methods like Random Forests.',
+'decision-trees':'Tree methods rely on splitting space. But many algorithms reason directly in terms of distance and similarity.',
+'distances':'Once we can measure similarity, we can classify new points using their neighbors.',
+'knn':'KNN groups by proximity. Clustering extends that idea by discovering hidden structure automatically.'
+};
+return transitions[id]||'Continue building intuition through the next chapter.';
+}
+
+
+
+function getChapterSummary(id){
+const summaries={
+'what-is-ml':[
+'What “learning” actually means',
+'The four ML paradigms',
+'Core ML vocabulary',
+'Training vs inference',
+'Real-world intuition'
+],
+'linear-regression':[
+'Linear relationships',
+'Gradient descent intuition',
+'Cost functions',
+'Underfitting vs overfitting',
+'Regression implementation'
+],
+'logistic-regression':[
+'Sigmoid intuition',
+'Probabilities & classification',
+'Decision boundaries',
+'Cross-entropy loss',
+'Binary prediction'
+],
+'model-evaluation':[
+'Accuracy pitfalls',
+'Precision & recall',
+'Confusion matrices',
+'ROC-AUC intuition',
+'Validation strategies'
+],
+'overfitting':[
+'Bias vs variance',
+'Regularization',
+'Generalization',
+'Data leakage',
+'Cross-validation'
+],
+'decision-trees':[
+'Recursive splitting',
+'Gini impurity',
+'Entropy',
+'Random forests',
+'Feature importance'
+],
+'distances':[
+'Euclidean distance',
+'Manhattan distance',
+'Cosine similarity',
+'Feature scaling',
+'Distance intuition'
+],
+'knn':[
+'Nearest-neighbor intuition',
+'Choosing K',
+'Weighted KNN',
+'Distance metrics',
+'Prediction tradeoffs'
+],
+'clustering':[
+'Unsupervised grouping',
+'K-means intuition',
+'Centroids',
+'Cluster quality',
+'Real-world clustering'
+]
+};
+
+return (summaries[id]||['Core concepts','Visual intuition','Examples','Pitfalls','Implementation'])
+.map(i=>`<li>${i}</li>`)
+.join('');
+}
+
+
 // ── STATE ────────────────────────────────────────────────────────────────
 let currentTopic=0,currentTab='explain',quizState={},editors={},started={};
 
 // ── SIDEBAR ──────────────────────────────────────────────────────────────
+
 function renderNav(){
-  document.getElementById('navList').innerHTML=topics.map((t,i)=>`
-    <div class="nav-item${i===currentTopic?' active':''}" onclick="selectTopic(${i})">
-      <span class="nav-num">${String(i).padStart(2,'0')}</span>
-      <span class="nav-dot" style="background:${t.color}"></span>
-      <span class="nav-label">${t.label}</span>
-    </div>`).join('');
+  const groups=[
+    {title:'Foundations', ids:['what-is-ml','linear-regression','logistic-regression']},
+    {title:'Evaluation', ids:['model-evaluation','overfitting']},
+    {title:'Tree Methods', ids:['decision-trees']},
+    {title:'Geometry & Similarity', ids:['distances','knn','clustering']}
+  ];
+
+  document.getElementById('navList').innerHTML=groups.map(g=>`
+    <div>
+      <div class="sidebar-section-title">${g.title}</div>
+      ${g.ids.map(id=>{
+        const i=topics.findIndex(t=>t.id===id);
+        const t=topics[i];
+        if(!t) return '';
+        return `
+        <div class="nav-item${i===currentTopic?' active':''}" onclick="selectTopic(${i})">
+          <span class="nav-num">${String(i+1).padStart(2,'0')}</span>
+          <span class="nav-dot" style="background:${t.color}"></span>
+          <span class="nav-label">${t.label}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+
   const n=Object.keys(started).length;
   document.getElementById('progressBar').style.width=(n/topics.length*100)+'%';
-  document.getElementById('progressLabel').textContent=`${n} / ${topics.length} chapters started`;
+  document.getElementById('progressLabel').textContent=`${n} / ${topics.length} concepts explored`;
 }
+
 
 // ── MAIN CONTENT ─────────────────────────────────────────────────────────
 function renderMain(){
@@ -1753,19 +2571,29 @@ function renderMain(){
   const hasViz=!!(vizRenderers[t.id]);
   document.getElementById('mainContent').innerHTML=`
     <div class="topic-header">
-      <div class="topic-tag"><span class="topic-dot" style="background:${t.color}"></span>Chapter ${String(currentTopic).padStart(2,'0')}</div>
-      <div class="topic-title">${t.label}</div>
-      <div class="topic-def">${c.definition}</div>
+      <div>
+        <div class="topic-tag"><span class="topic-dot" style="background:${t.color}"></span>Chapter ${String(currentTopic+1).padStart(2,'0')} of ${topics.length}</div>
+        <div class="topic-title">${t.label}</div>
+        <div class="topic-def">${c.definition}</div>
+      </div>
+
+      <div class="chapter-panel">
+        <div class="chapter-panel-title">In this chapter</div>
+        <ul>${getChapterSummary(t.id)}</ul>
+      </div>
     </div>
-    <div class="tabs">
-      <div class="tab${currentTab==='explain'?' active':''}" onclick="switchTab('explain')">Deep Dive</div>
-      <div class="tab${currentTab==='review'?' active':''}" onclick="switchTab('review')">Key Points</div>
-      <div class="tab${currentTab==='practice'?' active':''}" onclick="switchTab('practice')">Practice Quiz</div>
-      ${hasViz?`<div class="tab${currentTab==='viz'?' active':''}" onclick="switchTab('viz')">Visualize</div>`:''}
-      ${hasCode?`<div class="tab${currentTab==='coding'?' active':''}" onclick="switchTab('coding')">Coding</div>`:''}
+    
+
+<div class="tabs">
+
+      <div class="tab${currentTab==='explain'?' active':''}" onclick="switchTab('explain')">Learn</div>
+      <div class="tab${currentTab==='review'?' active':''}" onclick="switchTab('review')">Review</div>
+      <div class="tab${currentTab==='practice'?' active':''}" onclick="switchTab('practice')">Practice</div>
+      ${hasViz?`<div class="tab${currentTab==='viz'?' active':''}" onclick="switchTab('viz')">See</div>`:''}
+      ${hasCode?`<div class="tab${currentTab==='coding'?' active':''}" onclick="switchTab('coding')">Build</div>`:''}
     </div>
-    <div id="tab-explain" class="tab-content${currentTab==='explain'?' active':''}">${renderExplain(c)}</div>
-    <div id="tab-review"  class="tab-content${currentTab==='review'?' active':''}">${renderReview(c)}</div>
+    <div id="tab-explain" class="tab-content${currentTab==='explain'?' active':''}"><div class="content-shell">${renderExplain(c)}</div></div>
+    <div id="tab-review"  class="tab-content${currentTab==='review'?' active':''}"><div class="content-shell">${renderReview(c)}</div></div>
     <div id="tab-practice"class="tab-content${currentTab==='practice'?' active':''}">${renderPractice(t.id,c)}</div>
     ${hasViz?`<div id="tab-viz" class="tab-content viz-tab${currentTab==='viz'?' active':''}" ></div>`:''}
     ${hasCode?`<div id="tab-coding" class="tab-content${currentTab==='coding'?' active':''}">${renderCoding(t.id)}</div>`:''}`;
@@ -1974,7 +2802,8 @@ function renderExplain(c){
         <span class="section-chevron">&#9660;</span>
       </div>
       <div class="section-body">${formatBody(s.body)}</div>
-    </div>`).join('')}</div>`;
+    </div>`).join('')}</div>
+<div class="transition-next"><strong>Next Concept →</strong> ${getNarrativeTransition(topics[currentTopic].id)}</div>`;
 }
 
 function renderReview(c){
